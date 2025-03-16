@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Team, DebatePosition, Speech, TeamRole } from '@/types/debate';
+import {
+  Team,
+  DebatePosition,
+  Speech,
+  TeamRole,
+  Speaker,
+} from '@/types/debate';
 import SpeechRecorder from './SpeechRecorder';
 
 interface DebateRecorderProps {
@@ -15,307 +21,216 @@ const DebateRecorder: React.FC<DebateRecorderProps> = ({
   onTeamUpdate,
   onSpeechComplete,
 }) => {
-  // Local state to track selected speakers for each role
   const [localTeam, setLocalTeam] = useState<Team>(team);
+  const [ironMan, setIronMan] = useState(team.ironMan || false);
 
-  // Update local state when the team prop changes
   useEffect(() => {
     setLocalTeam(team);
+    setIronMan(team.ironMan || false);
   }, [team]);
 
-  // // Check if any speakers have been assigned to positions
-  // const hasAssignedSpeakers = (team: Team): boolean => {
-  //   switch (team.role) {
-  //     case TeamRole.OpeningGovernment:
-  //       return !!team.pm || !!team.dpm;
-  //     case TeamRole.OpeningOpposition:
-  //       return !!team.lo || !!team.dlo;
-  //     case TeamRole.ClosingGovernment:
-  //       return !!team.mg || !!team.gw;
-  //     case TeamRole.ClosingOpposition:
-  //       return !!team.mo || !!team.ow;
-  //     default:
-  //       return false;
-  //   }
-  // };
-
   const handleRoleChange = (role: keyof Team, speakerId: string) => {
-    if (!speakerId) {
-      // Handle empty selection
-      const updatedTeam = { ...localTeam, [role]: undefined };
-      setLocalTeam(updatedTeam);
-      onTeamUpdate(updatedTeam);
-      return;
-    }
-
     const selectedSpeaker = team.speakers.find(s => s.id === speakerId);
     if (!selectedSpeaker) return;
 
-    // Create a copy of the team to update
-    const updatedTeam = { ...localTeam, [role]: selectedSpeaker };
+    const updatedTeam = {
+      ...localTeam,
+      [role]: selectedSpeaker,
+      ironMan,
+    };
 
-    // If a speaker is assigned to a position, auto-assign the other speaker to the other position
-    if (team.speakers.length === 2) {
-      const otherSpeaker = team.speakers.find(s => s.id !== speakerId);
-
-      if (otherSpeaker) {
-        switch (team.role) {
-          case TeamRole.OpeningGovernment:
-            if (role === 'pm') updatedTeam.dpm = otherSpeaker;
-            if (role === 'dpm') updatedTeam.pm = otherSpeaker;
-            break;
-          case TeamRole.OpeningOpposition:
-            if (role === 'lo') updatedTeam.dlo = otherSpeaker;
-            if (role === 'dlo') updatedTeam.lo = otherSpeaker;
-            break;
-          case TeamRole.ClosingGovernment:
-            if (role === 'mg') updatedTeam.gw = otherSpeaker;
-            if (role === 'gw') updatedTeam.mg = otherSpeaker;
-            break;
-          case TeamRole.ClosingOpposition:
-            if (role === 'mo') updatedTeam.ow = otherSpeaker;
-            if (role === 'ow') updatedTeam.mo = otherSpeaker;
-            break;
-        }
-      }
+    if (ironMan) {
+      const otherRole = getOtherRole(role);
+      (updatedTeam[otherRole as keyof Team] as Speaker) = selectedSpeaker;
     }
 
     setLocalTeam(updatedTeam);
     onTeamUpdate(updatedTeam);
   };
 
-  // Render appropriate inputs based on team role
-  const renderSpeakerSelections = () => {
-    switch (team.role) {
-      case TeamRole.OpeningGovernment:
-        return (
-          <>
-            <div className='flex items-center justify-between mb-4'>
-              <label className='block text-sm font-medium text-gray-700'>
-                Prime Minister (PM)
-              </label>
-              <select
-                value={localTeam.pm?.id || ''}
-                onChange={e => handleRoleChange('pm', e.target.value)}
-                className='block w-1/2 p-2 border border-gray-300 rounded-md shadow-sm'>
-                <option value=''>Select Speaker</option>
-                {team.speakers.map(speaker => (
-                  <option key={speaker.id} value={speaker.id}>
-                    {speaker.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className='flex items-center justify-between mb-4'>
-              <label className='block text-sm font-medium text-gray-700'>
-                Deputy Prime Minister (DPM)
-              </label>
-              <select
-                value={localTeam.dpm?.id || ''}
-                onChange={e => handleRoleChange('dpm', e.target.value)}
-                className='block w-1/2 p-2 border border-gray-300 rounded-md shadow-sm'>
-                <option value=''>Select Speaker</option>
-                {team.speakers.map(speaker => (
-                  <option key={speaker.id} value={speaker.id}>
-                    {speaker.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        );
-
-      case TeamRole.OpeningOpposition:
-        return (
-          <>
-            <div className='flex items-center justify-between mb-4'>
-              <label className='block text-sm font-medium text-gray-700'>
-                Leader of Opposition (LO)
-              </label>
-              <select
-                value={localTeam.lo?.id || ''}
-                onChange={e => handleRoleChange('lo', e.target.value)}
-                className='block w-1/2 p-2 border border-gray-300 rounded-md shadow-sm'>
-                <option value=''>Select Speaker</option>
-                {team.speakers.map(speaker => (
-                  <option key={speaker.id} value={speaker.id}>
-                    {speaker.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className='flex items-center justify-between mb-4'>
-              <label className='block text-sm font-medium text-gray-700'>
-                Deputy Leader of Opposition (DLO)
-              </label>
-              <select
-                value={localTeam.dlo?.id || ''}
-                onChange={e => handleRoleChange('dlo', e.target.value)}
-                className='block w-1/2 p-2 border border-gray-300 rounded-md shadow-sm'>
-                <option value=''>Select Speaker</option>
-                {team.speakers.map(speaker => (
-                  <option key={speaker.id} value={speaker.id}>
-                    {speaker.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        );
-
-      case TeamRole.ClosingGovernment:
-        return (
-          <>
-            <div className='flex items-center justify-between mb-4'>
-              <label className='block text-sm font-medium text-gray-700'>
-                Member of Government (MG)
-              </label>
-              <select
-                value={localTeam.mg?.id || ''}
-                onChange={e => handleRoleChange('mg', e.target.value)}
-                className='block w-1/2 p-2 border border-gray-300 rounded-md shadow-sm'>
-                <option value=''>Select Speaker</option>
-                {team.speakers.map(speaker => (
-                  <option key={speaker.id} value={speaker.id}>
-                    {speaker.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className='flex items-center justify-between mb-4'>
-              <label className='block text-sm font-medium text-gray-700'>
-                Government Whip (GW)
-              </label>
-              <select
-                value={localTeam.gw?.id || ''}
-                onChange={e => handleRoleChange('gw', e.target.value)}
-                className='block w-1/2 p-2 border border-gray-300 rounded-md shadow-sm'>
-                <option value=''>Select Speaker</option>
-                {team.speakers.map(speaker => (
-                  <option key={speaker.id} value={speaker.id}>
-                    {speaker.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        );
-
-      case TeamRole.ClosingOpposition:
-        return (
-          <>
-            <div className='flex items-center justify-between mb-4'>
-              <label className='block text-sm font-medium text-gray-700'>
-                Member of Opposition (MO)
-              </label>
-              <select
-                value={localTeam.mo?.id || ''}
-                onChange={e => handleRoleChange('mo', e.target.value)}
-                className='block w-1/2 p-2 border border-gray-300 rounded-md shadow-sm'>
-                <option value=''>Select Speaker</option>
-                {team.speakers.map(speaker => (
-                  <option key={speaker.id} value={speaker.id}>
-                    {speaker.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className='flex items-center justify-between mb-4'>
-              <label className='block text-sm font-medium text-gray-700'>
-                Opposition Whip (OW)
-              </label>
-              <select
-                value={localTeam.ow?.id || ''}
-                onChange={e => handleRoleChange('ow', e.target.value)}
-                className='block w-1/2 p-2 border border-gray-300 rounded-md shadow-sm'>
-                <option value=''>Select Speaker</option>
-                {team.speakers.map(speaker => (
-                  <option key={speaker.id} value={speaker.id}>
-                    {speaker.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        );
-
+  const getOtherRole = (role: keyof Team) => {
+    switch (role) {
+      case 'pm':
+        return 'dpm';
+      case 'dpm':
+        return 'pm';
+      case 'lo':
+        return 'dlo';
+      case 'dlo':
+        return 'lo';
+      case 'mg':
+        return 'gw';
+      case 'gw':
+        return 'mg';
+      case 'mo':
+        return 'ow';
+      case 'ow':
+        return 'mo';
       default:
-        return null;
+        return role;
     }
   };
 
-  // Render speech recorders for selected speakers
-  const renderSpeechRecorders = () => {
-    const speakers = [];
+  const handleIronManChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setIronMan(isChecked);
+    const pmSpeaker = localTeam.pm;
+    const updatedTeam = {
+      ...localTeam,
+      ironMan: isChecked,
+      dpm: isChecked ? pmSpeaker : localTeam.dpm,
+      lo: isChecked ? pmSpeaker : localTeam.lo,
+      dlo: isChecked ? pmSpeaker : localTeam.dlo,
+      mg: isChecked ? pmSpeaker : localTeam.mg,
+      gw: isChecked ? pmSpeaker : localTeam.gw,
+      mo: isChecked ? pmSpeaker : localTeam.mo,
+      ow: isChecked ? pmSpeaker : localTeam.ow,
+    };
+    setLocalTeam(updatedTeam);
+    onTeamUpdate(updatedTeam);
+  };
 
-    switch (team.role) {
+  const renderSpeakerSelections = () => {
+    const roles: (keyof Team)[] = getRolesByTeamRole(team.role);
+
+    return (
+      <>
+        <div className='flex items-center justify-between mb-4'>
+          <h2 className='text-xl font-semibold'>{team.role}</h2>
+          <div className='flex items-center '>
+            <input
+              type='checkbox'
+              id={`ironman-${team.id}`}
+              checked={ironMan}
+              onChange={handleIronManChange}
+              className='mr-2 h-4 w-4'
+            />
+            <label htmlFor={`ironman-${team.id}`} className='text-xl'>
+              Iron Man
+            </label>
+          </div>
+        </div>
+
+        {roles.map((role: keyof Team) => (
+          <div key={role} className='mb-4'>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>
+              {getRoleLabel(role)}
+            </label>
+            <select
+              value={(localTeam[role] as Speaker)?.id || ''}
+              onChange={e => handleRoleChange(role, e.target.value)}
+              className={`w-full p-2 border border-gray-300 rounded-md ${
+                ironMan && role !== roles[0] ? 'cursor-not-allowed' : ''
+              }`}
+              disabled={ironMan && role !== roles[0]}>
+              <option value=''>Select a Speaker</option>
+              {team.speakers.map(speaker => (
+                <option key={speaker.id} value={speaker.id}>
+                  {speaker.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </>
+    );
+  };
+
+  const getRolesByTeamRole = (teamRole: TeamRole): (keyof Team)[] => {
+    switch (teamRole) {
       case TeamRole.OpeningGovernment:
-        if (localTeam.pm)
-          speakers.push({
-            speaker: localTeam.pm,
-            position: DebatePosition.PrimeMinister,
-          });
-        if (localTeam.dpm)
-          speakers.push({
-            speaker: localTeam.dpm,
-            position: DebatePosition.DeputyPrimeMinister,
-          });
-        break;
+        return ['pm', 'dpm'];
       case TeamRole.OpeningOpposition:
-        if (localTeam.lo)
-          speakers.push({
-            speaker: localTeam.lo,
-            position: DebatePosition.LeaderOfOpposition,
-          });
-        if (localTeam.dlo)
-          speakers.push({
-            speaker: localTeam.dlo,
-            position: DebatePosition.DeputyLeaderOfOpposition,
-          });
-        break;
+        return ['lo', 'dlo'];
       case TeamRole.ClosingGovernment:
-        if (localTeam.mg)
-          speakers.push({
-            speaker: localTeam.mg,
-            position: DebatePosition.MemberOfGovernment,
-          });
-        if (localTeam.gw)
-          speakers.push({
-            speaker: localTeam.gw,
-            position: DebatePosition.GovernmentWhip,
-          });
-        break;
+        return ['mg', 'gw'];
       case TeamRole.ClosingOpposition:
-        if (localTeam.mo)
-          speakers.push({
-            speaker: localTeam.mo,
-            position: DebatePosition.MemberOfOpposition,
-          });
-        if (localTeam.ow)
-          speakers.push({
-            speaker: localTeam.ow,
-            position: DebatePosition.OppositionWhip,
-          });
-        break;
+        return ['mo', 'ow'];
+      default:
+        return [];
     }
+  };
+
+  const getRoleLabel = (role: keyof Team) => {
+    switch (role) {
+      case 'pm':
+        return 'Prime Minister (PM)';
+      case 'dpm':
+        return 'Deputy Prime Minister (DPM)';
+      case 'lo':
+        return 'Leader of Opposition (LO)';
+      case 'dlo':
+        return 'Deputy Leader of Opposition (DLO)';
+      case 'mg':
+        return 'Member of Government (MG)';
+      case 'gw':
+        return 'Government Whip (GW)';
+      case 'mo':
+        return 'Member of Opposition (MO)';
+      case 'ow':
+        return 'Opposition Whip (OW)';
+      default:
+        return '';
+    }
+  };
+
+  const renderSpeechRecorders = () => {
+    const speakers: { speaker: Speaker; position: DebatePosition }[] = [];
+
+    const roles = getRolesByTeamRole(team.role) as (keyof Team)[];
+    roles.forEach(role => {
+      if (localTeam[role]) {
+        speakers.push({
+          speaker: localTeam[role] as Speaker,
+          position: getDebatePosition(role),
+        });
+      }
+    });
 
     return (
       <div className='mt-6 grid gap-4 grid-cols-1 md:grid-cols-2'>
-        {speakers.map(({ speaker, position }) => (
-          <SpeechRecorder
-            key={`${speaker.id}-${position}`}
-            speaker={speaker}
-            position={position}
-            teamId={team.id}
-            onSpeechComplete={onSpeechComplete}
-          />
-        ))}
+        {speakers.map(
+          ({
+            speaker,
+            position,
+          }: {
+            speaker: Team['speakers'][number];
+            position: DebatePosition;
+          }) => (
+            <SpeechRecorder
+              key={`${speaker.id}-${position}`}
+              speaker={speaker}
+              position={position}
+              teamId={team.id}
+              onSpeechComplete={onSpeechComplete}
+            />
+          ),
+        )}
       </div>
     );
+  };
+
+  const getDebatePosition = (role: keyof Team): DebatePosition => {
+    switch (role) {
+      case 'pm':
+        return DebatePosition.PrimeMinister;
+      case 'dpm':
+        return DebatePosition.DeputyPrimeMinister;
+      case 'lo':
+        return DebatePosition.LeaderOfOpposition;
+      case 'dlo':
+        return DebatePosition.DeputyLeaderOfOpposition;
+      case 'mg':
+        return DebatePosition.MemberOfGovernment;
+      case 'gw':
+        return DebatePosition.GovernmentWhip;
+      case 'mo':
+        return DebatePosition.MemberOfOpposition;
+      case 'ow':
+        return DebatePosition.OppositionWhip;
+      default:
+        return DebatePosition.PrimeMinister;
+    }
   };
 
   return (

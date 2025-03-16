@@ -167,7 +167,6 @@ const DebateManager: React.FC<DebateManagerProps> = ({
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         {session.teams.map(team => (
           <div key={team.id} className='bg-gray-50 p-4 rounded-lg'>
-            <h2 className='text-xl font-semibold mb-2'>{team.role}</h2>
             {/* Only show the DebateRecorder if there are speakers */}
             {team.speakers.length > 0 && (
               <DebateRecorder

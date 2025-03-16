@@ -44,16 +44,15 @@ export interface Team {
   name: string;
   role: TeamRole;
   speakers: Speaker[];
-
-  // Speaker positions
-  pm?: Speaker; // Prime Minister (Opening Government)
-  dpm?: Speaker; // Deputy Prime Minister (Opening Government)
-  lo?: Speaker; // Leader of Opposition (Opening Opposition)
-  dlo?: Speaker; // Deputy Leader of Opposition (Opening Opposition)
-  mg?: Speaker; // Member of Government (Closing Government)
-  gw?: Speaker; // Government Whip (Closing Government)
-  mo?: Speaker; // Member of Opposition (Closing Opposition)
-  ow?: Speaker; // Opposition Whip (Closing Opposition)
+  ironMan?: boolean;
+  pm?: Speaker;
+  dpm?: Speaker;
+  lo?: Speaker;
+  dlo?: Speaker;
+  mg?: Speaker;
+  gw?: Speaker;
+  mo?: Speaker;
+  ow?: Speaker;
 }
 
 export interface DebateSession {

@@ -83,3 +83,14 @@ export interface OralAdjudication {
   notes?: string;
   audioBlob: Blob;
 }
+
+export interface Room {
+  id: string;
+  name: string;
+  ogTeamId?: string;
+  ooTeamId?: string;
+  cgTeamId?: string;
+  coTeamId?: string;
+  panelJudgeIds?: string[];
+  chairJudgeId?: string;
+}

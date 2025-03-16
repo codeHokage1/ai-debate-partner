@@ -9,6 +9,7 @@ import {
   Speaker,
 } from '@/types/debate';
 import SpeechRecorder from './SpeechRecorder';
+import { FaUsers, FaUser } from 'react-icons/fa';
 
 interface DebateRecorderProps {
   team: Team;
@@ -95,43 +96,58 @@ const DebateRecorder: React.FC<DebateRecorderProps> = ({
 
     return (
       <>
-        <div className='flex items-center justify-between mb-4'>
-          <h2 className='text-xl font-semibold'>{team.role}</h2>
-          <div className='flex items-center '>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4'>
+          <div className='flex items-center gap-2'>
+            <FaUsers className='h-5 w-5 text-indigo-600' />
+            <h3 className='text-xl font-semibold text-slate-800'>
+              {team.role}
+            </h3>
+          </div>
+
+          <div className='flex items-center gap-2 px-4 py-3 bg-indigo-50 rounded-lg'>
             <input
               type='checkbox'
               id={`ironman-${team.id}`}
               checked={ironMan}
               onChange={handleIronManChange}
-              className='mr-2 h-4 w-4'
+              className='h-5 w-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500'
             />
-            <label htmlFor={`ironman-${team.id}`} className='text-xl'>
-              Iron Man
+            <label
+              htmlFor={`ironman-${team.id}`}
+              className='text-indigo-700 font-medium'>
+              Iron Man Mode
             </label>
           </div>
         </div>
 
-        {roles.map((role: keyof Team) => (
-          <div key={role} className='mb-4'>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              {getRoleLabel(role)}
-            </label>
-            <select
-              value={(localTeam[role] as Speaker)?.id || ''}
-              onChange={e => handleRoleChange(role, e.target.value)}
-              className={`w-full p-2 border border-gray-300 rounded-md ${
-                ironMan && role !== roles[0] ? 'cursor-not-allowed' : ''
-              }`}
-              disabled={ironMan && role !== roles[0]}>
-              <option value=''>Select a Speaker</option>
-              {team.speakers.map(speaker => (
-                <option key={speaker.id} value={speaker.id}>
-                  {speaker.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+          {roles.map((role: keyof Team) => (
+            <div key={role} className='mb-4'>
+              <label className='block text-sm font-medium text-slate-700 mb-2'>
+                {getRoleLabel(role)}
+              </label>
+              <div className='relative'>
+                <select
+                  value={(localTeam[role] as Speaker)?.id || ''}
+                  onChange={e => handleRoleChange(role, e.target.value)}
+                  className={`block w-full pl-4 pr-10 py-3 text-base border-slate-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
+                    ironMan && role !== roles[0]
+                      ? 'bg-slate-100 cursor-not-allowed'
+                      : 'bg-white'
+                  }`}
+                  disabled={ironMan && role !== roles[0]}>
+                  <option value=''>Select a Speaker</option>
+                  {team.speakers.map(speaker => (
+                    <option key={speaker.id} value={speaker.id}>
+                      {speaker.name}
+                    </option>
+                  ))}
+                </select>
+                <FaUser className='absolute right-4 top-3.5 h-4 w-4 text-slate-400 pointer-events-none' />
+              </div>
+            </div>
+          ))}
+        </div>
       </>
     );
   };
@@ -234,10 +250,15 @@ const DebateRecorder: React.FC<DebateRecorderProps> = ({
   };
 
   return (
-    <div className='mb-8 p-6 rounded-lg shadow-md bg-white'>
-      <h2 className='text-xl font-bold text-gray-800 mb-4'>{team.name}</h2>
-      <div className='mb-6'>{renderSpeakerSelections()}</div>
-      {renderSpeechRecorders()}
+    <div className='mb-8 card-custom'>
+      <div className='card-header-custom'>
+        <h2 className='text-xl font-bold text-white'>{team.name}</h2>
+      </div>
+
+      <div className='card-body-custom'>
+        <div className='mb-8'>{renderSpeakerSelections()}</div>
+        {renderSpeechRecorders()}
+      </div>
     </div>
   );
 };
